@@ -270,7 +270,7 @@ signature = infer_signature(
 )
 
 # Set the registered model name based on catalog, schema, and model
-registered_model_name = f"{catalog}.{schema}.{model}"
+registered_model_name = f"{catalog}_{schema}_{model}"
 
 # Start an MLflow run to log the causal model and its related metadata
 with mlflow.start_run(run_name="causal_model") as run:
