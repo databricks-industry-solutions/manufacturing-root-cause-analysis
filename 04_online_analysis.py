@@ -16,7 +16,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install dowhy==0.12 --quiet
+# MAGIC %pip install -r ./requirements.txt --quiet
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -39,9 +39,12 @@ client = mlflow.tracking.MlflowClient()
 user_name = spark.sql("SELECT current_user()").collect()[0][0]
 first_name = user_name.split(".")[0]
 
+dbutils.widgets.text("catalog", f"causal_solacc_{first_name}", "Catalog Name")
+dbutils.widgets.text("schema", "rca", "Schema Name")
+
 # Set up Unity Catalog
-catalog = f'causal_solacc_{first_name}'     # Change this to your catalog name
-schema = f'rca'                             # Change this to your schema name
+catalog = dbutils.widgets.get("catalog")    # Change this to your catalog name
+schema = dbutils.widgets.get("schema")      # Change this to your schema name
 model = f"manufacturing_rca"                # Change this to your model name
 log_schema = "log"                          # A schema within the catalog where the inferece log is going to be stored 
 model_name = f"{catalog}.{schema}.{model}"  # An existing model in model registry, may have multiple versions
@@ -69,7 +72,7 @@ my_json = {
                 "model_version": model_version,
                 "workload_type": "CPU",
                 "workload_size": "Small",
-                "scale_to_zero_enabled": "true",
+                "scale_to_zero_enabled": True,
             }
         ],
         "auto_capture_config": {
@@ -111,7 +114,7 @@ def func_create_endpoint(json):
             name=json["name"], 
             config=json["config"]
         )
-    except:
+    except Exception:
         client.create_endpoint(
             name = model_serving_endpoint_name,
             config = json["config"],
