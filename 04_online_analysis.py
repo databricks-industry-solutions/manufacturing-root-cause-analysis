@@ -16,6 +16,10 @@
 
 # COMMAND ----------
 
+# MAGIC %sh apt-get update && apt-get install -y graphviz graphviz-dev
+
+# COMMAND ----------
+
 # MAGIC %pip install -r ./requirements.txt --quiet
 # MAGIC dbutils.library.restartPython()
 
@@ -46,7 +50,6 @@ dbutils.widgets.text("schema", "rca", "Schema Name")
 catalog = dbutils.widgets.get("catalog")    # Change this to your catalog name
 schema = dbutils.widgets.get("schema")      # Change this to your schema name
 model = f"manufacturing_rca"                # Change this to your model name
-log_schema = "log"                          # A schema within the catalog where the inferece log is going to be stored 
 model_name = f"{catalog}.{schema}.{model}"  # An existing model in model registry, may have multiple versions
 model_serving_endpoint_name = f"{model}_{first_name}"
 
@@ -54,7 +57,7 @@ model_serving_endpoint_name = f"{model}_{first_name}"
 
 # MAGIC %md
 # MAGIC ## Set up configurations
-# MAGIC Based on your latency and throughput requirements, it’s important to select the appropriate `workload_type` and `workload_size`. The `auto_capture_config` block defines where to store inference logs, including the requests and responses from the endpoint, along with their timestamps.
+# MAGIC Based on your latency and throughput requirements, it’s important to select the appropriate `workload_type` and `workload_size`.
 
 # COMMAND ----------
 
@@ -75,23 +78,8 @@ my_json = {
                 "scale_to_zero_enabled": True,
             }
         ],
-        "auto_capture_config": {
-            "catalog_name": catalog,
-            "schema_name": log_schema,
-            "table_name_prefix": model_serving_endpoint_name,
-        },
     },
 }
-
-# Ensure the schema for the inference table exists
-_ = spark.sql(
-    f"CREATE SCHEMA IF NOT EXISTS {catalog}.{log_schema}"
-)
-
-# Drop the inference table if it exists
-_ = spark.sql(
-    f"DROP TABLE IF EXISTS {catalog}.{log_schema}.`{model_serving_endpoint_name}_payload`"
-)
 
 # COMMAND ----------
 
